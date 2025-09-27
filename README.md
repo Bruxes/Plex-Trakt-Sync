@@ -27,6 +27,7 @@ This project is designed to be a user-friendly solution that handles both TV sho
 -   Python 3 installed on the machine where Tautulli runs.
 -   The `requests` library for Python. If you don't have it, install it:
 
+    ```bash
     pip install requests
 
 ### 2. Get Your Trakt API Credentials
@@ -43,11 +44,12 @@ This project is designed to be a user-friendly solution that handles both TV sho
 
 1.  Run the `get_trakt_token.py` script from your terminal:
 
+    ```bash
     python get_trakt_token.py
 
-2.  The script will guide you. It will provide a code and open a URL in your browser.
-3.  Enter the code on the Trakt website and authorize the application.
-4.  Return to the terminal. The script will automatically detect the authorization and save your tokens to `config.ini`.
+3.  The script will guide you. It will provide a code and open a URL in your browser.
+4.  Enter the code on the Trakt website and authorize the application.
+5.  Return to the terminal. The script will automatically detect the authorization and save your tokens to `config.ini`.
 
 ### 4. Verify Your Setup (Recommended)
 
@@ -69,6 +71,7 @@ If successful, it will show a success message with your Trakt username.
     -   Go to the **Watched** section.
     -   In the text box, enter the following arguments:
 
+    ```bash
     --title "{show_name}" --media_type "{media_type}" --season "{season_num}" --episode "{episode_num}"
 
 ## That's it!
