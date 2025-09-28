@@ -1,5 +1,8 @@
 # Plex-Trakt-Sync
 
+<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/da29ce42-1321-44a5-9587-3d181c20ca20" />
+
+
 A simple and robust Python script to automatically sync your Plex watch history to Trakt.tv, triggered by Tautulli.
 
 This project is designed to be a user-friendly solution that handles both TV shows and movies, with automatic token refreshing to keep it running smoothly.
