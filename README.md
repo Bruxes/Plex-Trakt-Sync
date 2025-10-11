@@ -1,29 +1,23 @@
 # Plex-Trakt-Sync
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/da29ce42-1321-44a5-9587-3d181c20ca20?raw=true" width="250" alt="AniList & Plex Integration">
+  <img src="https://github.com/user-attachments/assets/da29ce42-1321-44a5-9587-3d181c20ca20?raw=true" width="250" alt="Trakt & Plex Integration">
 </p>
 
-A simple and robust Python script to automatically sync your Plex watch history to Trakt.tv, triggered by Tautulli.
+A modern and robust Python script to automatically scrobble your watched movies and TV shows from Plex to Trakt.tv, triggered by Tautulli.
 
-This project is designed to be a user-friendly solution that handles both TV shows and movies, with automatic token refreshing to keep it running smoothly.
+This project is designed to be a user-friendly solution. **You only need to edit the `config.ini` file to get started.**
 
 ## Project Files
 
--   **`trakt_sync.py`**: The main script that Tautulli runs to sync watch history.
+-   **`trakt_sync.py`**: The main script that Tautulli will run.
 -   **`config.ini`**: The central configuration file. **This is the only file you need to edit.**
 -   **`get_trakt_token.py`**: A helper script that you run once to automatically generate your API token.
--   **`test_trakt_config.py`**: A script to test your configuration and ensure everything is working.
-
-## Features
-
--   **Automatic Scrobbling**: Syncs watched episodes and movies to Trakt in real-time.
--   **Handles Both Shows & Movies**: Correctly identifies and syncs both media types.
--   **Automatic Token Refresh**: If your access token expires, the script automatically gets a new one so it never stops working.
--   **Secure**: Keeps your API credentials separate from the main script in a `config.ini` file.
--   **Easy Setup**: A simple, guided process to get your tokens.
+-   **`test_trakt_config.py`**: A test script to help you know if you did everything correctly.
 
 ## Setup Instructions
+
+Follow these steps carefully. The entire configuration is handled in the `config.ini` file.
 
 ### 1. Prerequisites
 
@@ -31,11 +25,13 @@ This project is designed to be a user-friendly solution that handles both TV sho
 -   Python 3 installed on the machine where Tautulli runs.
 -   The `requests` library for Python. If you don't have it, install it:
 
-    ```bash
     pip install requests
 
-### 2. Get Your Trakt API Credentials
+### 2. Generate Your Trakt API Token (One-Time Setup)
 
+This process uses the `get_trakt_token.py` script to automatically generate and save your token.
+
+**Step 2.1: Get Your Client ID and Secret**
 1.  Go to the Trakt API Applications page: **[https://trakt.tv/oauth/applications/new](https://trakt.tv/oauth/applications/new)**
 2.  Fill in the form:
     -   **Name**: `Tautulli Sync` (or anything you like)
@@ -44,43 +40,41 @@ This project is designed to be a user-friendly solution that handles both TV sho
 4.  Open the `config.ini` file from this repository.
 5.  Copy your **Client ID** and **Client Secret** and paste them into the corresponding fields in `config.ini`. Save the file.
 
-### 3. Generate Your Trakt API Token
+**Step 2.2: Run the Token Generation Script**
+1.  Now, run the `get_trakt_token.py` script from your terminal:
 
-1.  Run the `get_trakt_token.py` script from your terminal:
-
-    ```bash
     python get_trakt_token.py
 
-3.  The script will guide you. It will provide a code and open a URL in your browser.
-4.  Enter the code on the Trakt website and authorize the application.
-5.  Return to the terminal. The script will automatically detect the authorization and save your tokens to `config.ini`.
+2.  The script will give you a code and open a URL in your browser.
+3.  Enter the code on the Trakt website and authorize the application.
+4.  Return to the terminal. The script will automatically detect the authorization and save your tokens to `config.ini`.
 
-### 4. Verify Your Setup (Recommended)
+### 3. Verify Your Setup (Recommended)
 
-Run the included test script to verify that your configuration is correct.
+After completing the configuration, run the included test script to verify that everything is working correctly.
 
     python test_trakt_config.py
 
-If successful, it will show a success message with your Trakt username.
+**If the test is successful**, you will see a success message with your Trakt username.
 
-### 5. Tautulli Configuration
+### 4. Tautulli Configuration
 
-1.  In Tautulli, go to **Settings > Notification Agents > Add a new notification agent** and select **Script**.
-2.  **Configuration Tab:**
+1.  In Tautulli, go to **Settings > Notification Agents > Add a new notification agent**.
+2.  Select **Script**.
+3.  **Configuration Tab:**
     -   **Script Folder**: Select the folder where you saved the scripts.
     -   **Script File**: Choose `trakt_sync.py`.
-3.  **Triggers Tab:**
+4.  **Triggers Tab:**
     -   Check the box for **Watched**.
-4.  **Arguments Tab:**
+5.  **Arguments Tab:**
     -   Go to the **Watched** section.
-    -   In the text box, enter the following arguments:
+    -   Enter the following arguments for both movies and episodes:
 
-    ```bash
-    --title "{show_name}" --media_type "{media_type}" --season "{season_num}" --episode "{episode_num}"
+    --title "{show_name}{title}" --media_type "{media_type}" --season "{season_num}" --episode "{episode_num}"
 
 ## That's it!
 
-Your setup is complete. The project is now fully configured and ready to sync your watch history.
+Your setup is complete. The project is now fully configured and ready to go.
 
 ---
 ## License
