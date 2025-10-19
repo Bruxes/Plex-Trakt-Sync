@@ -1,4 +1,4 @@
-# filename: trakt_sync.py
+# filename: trakt_sync.py (Scrobble Only Version)
 
 import requests
 import configparser
@@ -57,7 +57,7 @@ def refresh_token(conf):
         return None
 
 # --- API FUNCTIONS ---
-def make_api_request(method, url, headers, json_payload):
+def make_api_request(method, url, headers, json_payload=None):
     """Makes an API request and handles token refresh automatically."""
     response_func = requests.post if method.lower() == 'post' else requests.get
     response = response_func(url, headers=headers, json=json_payload)
@@ -67,7 +67,6 @@ def make_api_request(method, url, headers, json_payload):
         new_token = refresh_token(conf)
         if new_token:
             headers['Authorization'] = f"Bearer {new_token}"
-            # Retry the original request with the new token
             return response_func(url, headers=headers, json=json_payload)
     return response
 
@@ -89,7 +88,6 @@ def search_media(headers, title, media_type='show'):
 def scrobble_media(headers, media_object, media_type, season=None, episode=None):
     """Sends the scrobble (watch event) to Trakt."""
     scrobble_payload = { "progress": 100 }
-    
     if media_type == 'show':
         scrobble_payload["show"] = { "ids": media_object['ids'] }
         scrobble_payload["episode"] = { "season": season, "number": episode }
@@ -99,7 +97,6 @@ def scrobble_media(headers, media_object, media_type, season=None, episode=None)
         print(f"▶️  Syncing movie '{media_object['title']}' to Trakt...")
 
     response = make_api_request('post', "https://api.trakt.tv/scrobble/stop", headers, scrobble_payload)
-
     if response.status_code == 201:
         print("🎉 Success! Media synced to Trakt.")
     else:
@@ -107,10 +104,10 @@ def scrobble_media(headers, media_object, media_type, season=None, episode=None)
 
 def main():
     conf = load_config()
-    
     parser = argparse.ArgumentParser(description="Syncs Plex watch history from Tautulli to Trakt.")
+    # Removed rating-related arguments
     parser.add_argument('--title', required=True, help="The title of the media.")
-    parser.add_argument('--media_type', required=True, help="The type of media ('movie' or 'show').")
+    parser.add_argument('--media_type', required=True, choices=['movie', 'show'], help="The type of media ('movie' or 'show').")
     parser.add_argument('--episode', type=int, help="The episode number (for shows).")
     parser.add_argument('--season', type=int, help="The season number (for shows).")
 
@@ -125,13 +122,16 @@ def main():
         'Authorization': f"Bearer {conf['access_token']}"
     }
 
+    # Find the media on Trakt first
     media_data = search_media(headers, args.title, args.media_type)
+    
     if media_data:
+        # Handle scrobbling
         if args.media_type == 'show':
             if args.season is not None and args.episode is not None:
                 scrobble_media(headers, media_data, 'show', args.season, args.episode)
             else:
-                print("🚨 Error: Missing season/episode number for a show.")
+                print("🚨 Error: Missing season/episode number for a show scrobble.")
         elif args.media_type == 'movie':
             scrobble_media(headers, media_data, 'movie')
 
