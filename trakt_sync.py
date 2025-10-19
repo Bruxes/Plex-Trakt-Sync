@@ -1,4 +1,4 @@
-# filename: trakt_sync.py (Scrobble Only Version)
+# filename: trakt_sync.py (Tautulli Bug Workaround Version)
 
 import requests
 import configparser
@@ -72,29 +72,43 @@ def make_api_request(method, url, headers, json_payload=None):
 
 def search_media(headers, title, media_type='show'):
     """Searches for a show or movie on Trakt to get its IDs."""
-    print(f"🔎 Searching for {media_type} '{title}' on Trakt...")
-    search_url = f"https://api.trakt.tv/search/{media_type}?query={requests.utils.quote(title)}"
+    # Ensure media_type is either 'show' or 'movie' for the API call
+    search_type = 'show' if media_type == 'show' else 'movie'
+    print(f"🔎 Searching for {search_type} '{title}' on Trakt...")
+    search_url = f"https://api.trakt.tv/search/{search_type}?query={requests.utils.quote(title)}"
     response = make_api_request('get', search_url, headers, None)
     
     if response.status_code == 200:
         results = response.json()
         if results:
-            first_result = results[0][media_type]
-            print(f"✅ Found '{first_result['title']}' (Year: {first_result.get('year', 'N/A')})")
-            return first_result
-    print(f"❌ {media_type.capitalize()} '{title}' not found on Trakt.")
+            # Ensure the key exists before accessing
+            result_key = search_type
+            if result_key in results[0]:
+                 first_result = results[0][result_key]
+                 print(f"✅ Found '{first_result['title']}' (Year: {first_result.get('year', 'N/A')})")
+                 return first_result
+            else:
+                 print(f"❌ Unexpected result format from Trakt search for '{title}'.")
+                 return None
+
+    print(f"❌ {search_type.capitalize()} '{title}' not found on Trakt.")
     return None
 
 def scrobble_media(headers, media_object, media_type, season=None, episode=None):
     """Sends the scrobble (watch event) to Trakt."""
     scrobble_payload = { "progress": 100 }
+    
+    # Use 'show' even if Tautulli incorrectly sent 'episode'
     if media_type == 'show':
         scrobble_payload["show"] = { "ids": media_object['ids'] }
         scrobble_payload["episode"] = { "season": season, "number": episode }
         print(f"▶️  Syncing S{season:02d}E{episode:02d} to Trakt...")
-    else: # movie
+    elif media_type == 'movie':
         scrobble_payload["movie"] = { "ids": media_object['ids'] }
         print(f"▶️  Syncing movie '{media_object['title']}' to Trakt...")
+    else:
+        print(f"🚨 Error: Unknown media type '{media_type}' for scrobbling.")
+        return
 
     response = make_api_request('post', "https://api.trakt.tv/scrobble/stop", headers, scrobble_payload)
     if response.status_code == 201:
@@ -105,15 +119,22 @@ def scrobble_media(headers, media_object, media_type, season=None, episode=None)
 def main():
     conf = load_config()
     parser = argparse.ArgumentParser(description="Syncs Plex watch history from Tautulli to Trakt.")
-    # Removed rating-related arguments
+    # Allow 'episode' temporarily but treat it as 'show'
     parser.add_argument('--title', required=True, help="The title of the media.")
-    parser.add_argument('--media_type', required=True, choices=['movie', 'show'], help="The type of media ('movie' or 'show').")
+    parser.add_argument('--media_type', required=True, help="The type of media ('movie' or 'show').")
     parser.add_argument('--episode', type=int, help="The episode number (for shows).")
     parser.add_argument('--season', type=int, help="The season number (for shows).")
 
     args = parser.parse_args()
     
-    print(f"\n🎬 Tautulli reported a watch for '{args.title}' ({args.media_type}).")
+    # --- WORKAROUND FOR TAUTULLI BUG ---
+    # If Tautulli sends 'episode', treat it as 'show'
+    actual_media_type = 'show' if args.media_type == 'episode' else args.media_type
+    if args.media_type == 'episode':
+        print(f"ℹ️  Received '--media_type episode' from Tautulli, treating as 'show'.")
+    # ------------------------------------
+
+    print(f"\n🎬 Tautulli reported a watch for '{args.title}' ({args.media_type}).") # Log original value
     
     headers = {
         'Content-Type': 'application/json',
@@ -122,17 +143,17 @@ def main():
         'Authorization': f"Bearer {conf['access_token']}"
     }
 
-    # Find the media on Trakt first
-    media_data = search_media(headers, args.title, args.media_type)
+    # Find the media on Trakt first using the corrected media type
+    media_data = search_media(headers, args.title, actual_media_type)
     
     if media_data:
-        # Handle scrobbling
-        if args.media_type == 'show':
+        # Handle scrobbling using the corrected media type
+        if actual_media_type == 'show':
             if args.season is not None and args.episode is not None:
                 scrobble_media(headers, media_data, 'show', args.season, args.episode)
             else:
                 print("🚨 Error: Missing season/episode number for a show scrobble.")
-        elif args.media_type == 'movie':
+        elif actual_media_type == 'movie':
             scrobble_media(headers, media_data, 'movie')
 
 if __name__ == "__main__":
