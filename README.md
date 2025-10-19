@@ -70,7 +70,7 @@ After completing the configuration, run the included test script to verify that 
     -   Go to the **Watched** section.
     -   Enter the following arguments for both movies and episodes:
 
-    --title "{show_name}{title}" --media_type "{media_type}" --season "{season_num}" --episode "{episode_num}"
+    --title "{title}" --media_type "{media_type}" --season "{season_num}" --episode "{episode_num}"
 
 ## That's it!
 
